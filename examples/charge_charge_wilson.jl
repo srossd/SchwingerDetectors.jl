@@ -17,12 +17,10 @@
 # subtraction of ⟨j¹(bR)⟩⟨j¹(bL)⟩), evaluated on each TDVP snapshot.
 #
 # Run from the project root:
-#   SMOKE=1 julia --project=. Schwinger/toolkit/examples/charge_charge_wilson.jl
-#   AG=0.2 MG=0.0 N=128 NL=16 T=12 RLIST=8,16,24 julia --project=. .../charge_charge_wilson.jl
+#   SMOKE=1 julia --project=. examples/charge_charge_wilson.jl
+#   AG=0.2 MG=0.0 N=128 NL=16 T=12 RLIST=8,16,24 julia --project=. examples/charge_charge_wilson.jl
 # =============================================================================
-using Schwinger, JLD2, Printf
-include(joinpath(@__DIR__, "..", "SchwingerToolkit.jl"))
-using .SchwingerToolkit
+using Schwinger, SchwingerDetectors, JLD2, Printf
 
 const SMOKE = get(ENV, "SMOKE", "0") == "1"
 AG   = parse(Float64, get(ENV, "AG", "0.2"))

@@ -1,17 +1,23 @@
 # =============================================================================
-# SchwingerToolkit — consolidated real-time Schwinger-model capabilities.
+# SchwingerDetectors — real-time detector correlators for the lattice Schwinger model.
 #
 # A small library over EXPORTED Schwinger.jl calls, grouped into three concerns:
 #   • state_prep.jl — prepare quench / wavepacket initial states
 #   • measure.jl    — time-evolve while recording densities
 #   • detectors.jl  — detector-operator 1-point and 2-point functions
 #
-# Usage (from the project root, environment active):
-#   include("Schwinger/toolkit/SchwingerToolkit.jl")
-#   using .SchwingerToolkit
+# Usage:
+#   using SchwingerDetectors
 # See README.md for the capability map and the exported-API caveats.
 # =============================================================================
-module SchwingerToolkit
+module SchwingerDetectors
+
+# Schwinger.jl's `__init__` uses `@eval` to monkey-patch `MPSKit.excitations`, which is
+# illegal while a *dependent* package is being precompiled ("Evaluation into the closed
+# module `Schwinger`"). We add no compiled code worth caching, so we simply opt out of
+# precompilation; `using Schwinger` then runs its init at load time, exactly as it does at
+# the REPL top level. (Remove this once the eval is gone upstream.)
+__precompile__(false)
 
 using Schwinger
 using MPSKit

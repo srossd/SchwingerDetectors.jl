@@ -5,7 +5,7 @@ thin, documented glue over exported [`Schwinger.jl`](https://github.com/srossd/S
 calls. A "detector" is a conserved current (`ChargeCurrent` ``j^1``, `EnergyCurrent`
 ``\mathcal{J}=T^{01}``) or a density, read at a fixed lattice site as a function of time.
 
-Everything lives in the module `SchwingerToolkit`, spread across three files:
+Everything lives in the module `SchwingerDetectors`, spread across three files:
 
 | file | concern | key functions |
 |------|---------|---------------|
@@ -20,17 +20,25 @@ Pages = ["man/stateprep.md", "man/measure.md", "man/detectors.md", "man/examples
 Depth = 3
 ```
 
-## Loading
+## Installation
 
-Not a registered package — clone and `include` the module:
+`SchwingerDetectors` and its dependencies (`Schwinger`, and Schwinger's own dependency
+`MPSKitLEMPO`) are unregistered, so add all three in one `Pkg` operation:
 
 ```julia
-include("SchwingerDetectors.jl/SchwingerToolkit.jl")
-using .SchwingerToolkit
+using Pkg
+Pkg.add([
+    PackageSpec(url = "https://github.com/benjamints/MPSKitLEMPO.jl"),
+    PackageSpec(url = "https://github.com/srossd/Schwinger.jl"),
+    PackageSpec(url = "https://github.com/srossd/SchwingerDetectors.jl"),
+])
 ```
 
-Wiring check: `SMOKE=1 julia --project=. demo.jl`. Units are `g = 1` throughout, so
-`ag = a·g` is the spacing and `mg = m/g` the mass.
+```julia
+using SchwingerDetectors
+```
+
+Units are `g = 1` throughout, so `ag = a·g` is the spacing and `mg = m/g` the mass.
 
 ## When to use what
 
