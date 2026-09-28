@@ -1,0 +1,4 @@
+data/
+*.jld2
+Manifest.toml
+.DS_Store
