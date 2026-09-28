@@ -29,13 +29,17 @@ jobs:
 
       - uses: julia-actions/cache@v2
 
-      # Schwinger.jl is unregistered — add it from GitHub, then resolve the rest
-      # of docs/Project.toml (Documenter, MPSKit).
+      # Schwinger.jl AND its dependency MPSKitLEMPO are both unregistered, so they
+      # must be introduced in a single resolve — otherwise Pkg looks up MPSKitLEMPO
+      # in the registry and fails ("has no known versions"). The remaining docs deps
+      # (Documenter, MPSKit) then resolve from the registry via instantiate.
       - name: Install documentation dependencies
         run: |
           julia --project=docs -e '
             using Pkg
-            Pkg.add(url = "https://github.com/srossd/Schwinger.jl")
+            Pkg.add([
+              PackageSpec(url = "https://github.com/benjamints/MPSKitLEMPO.jl"),
+              PackageSpec(url = "https://github.com/srossd/Schwinger.jl")])
             Pkg.instantiate()'
 
       - name: Build and deploy
