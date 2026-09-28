@@ -2,3 +2,8 @@ data/
 *.jld2
 Manifest.toml
 .DS_Store
+
+# orchestrator/agent config and internal notes — kept local, not published
+CLAUDE.md
+.orchestrator.toml
+UPSTREAM_WISHLIST.md
