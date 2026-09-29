@@ -16,8 +16,11 @@ const GS_TOL  = parse(Float64, get(ENV, "GS_TOL",   "1e-8"))   # groundstate ene
 const HEAT_STRIDE = parse(Int, get(ENV, "HEAT_STRIDE", "5"))   # record density maps every k steps
 const EAVG_TOL = parse(Float64, get(ENV, "EAVG_TOL", "0.5"))   # |<E_avg>| must be below this (+eps)
 
-# θ/π  ->  θ2π = (θ/π)/2
-theta2pi(theta_over_pi) = theta_over_pi / 2
+# θ/π  ->  θ2π, folded into (-0.5, 0.5].  θ is periodic mod 2π (θ2π mod 1), so e.g. θ/π=1.2
+# (θ2π=0.6) is the SAME physics as θ2π=-0.4.  The finite DMRG starts from a random L≈0 state
+# with no branch bias, so it lands on the TRUE (screened, |<E>|<0.5) vacuum only when θ2π is in
+# (-0.5,0.5] — confirmed by energy (θ2π=-0.4: E0=-308.22 < false +0.6 branch E0=-307.43).
+theta2pi(theta_over_pi) = (r = theta_over_pi / 2; r - round(r))
 
 # center bond/site of the lattice and the Wilson-line endpoints (gx = GX_WL wide, centered)
 const CENTER = N ÷ 2
