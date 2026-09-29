@@ -1,6 +1,8 @@
-# Aggregation + plots. Reads all qq_theta*.jld2 in <outdir> and produces:
-#   (1) <QQ> vs θ/π for each R      -> qq_vs_theta.png
-#   (2) E-field & current heatmaps  -> heat_E_theta<..>.png, heat_J_theta<..>.png  (per θ)
+# Aggregation + plots for the per-(θ,R) production outputs (qq_th<tag>_R<R>.jld2).
+# Produces:
+#   (1) <QQ> vs θ/π for each R      -> qq_vs_theta.png (+ full-magnitude variant)
+#   (2) E-field & current heatmaps  -> heat_E_theta<tag>.png, heat_J_theta<tag>.png (per θ)
+#       (heatmaps come from the RECORD_HEAT task, i.e. the smallest-R file per θ)
 #
 #   julia --project=production production/plots.jl <outdir>
 ENV["GKSwstype"] = "100"   # headless GR
@@ -10,52 +12,51 @@ gr()
 outdir = get(ARGS, 1, joinpath(@__DIR__, "..", "data", "qq_sweep"))
 plotdir = joinpath(outdir, "plots"); mkpath(plotdir)
 
-files = sort(filter(f -> startswith(basename(f), "qq_theta") && endswith(f, ".jld2"),
-                    readdir(outdir; join = true)))
-isempty(files) && error("no qq_theta*.jld2 found in $outdir")
+files = filter(f -> occursin(r"^qq_th.*_R\d+\.jld2$", basename(f)), readdir(outdir; join=true))
+isempty(files) && error("no qq_th*_R*.jld2 in $outdir")
+recs = [load(f) for f in files]
 
-data = [load(f) for f in files]
-order = sortperm([d["theta_over_pi"] for d in data])
-data = data[order]
-thetas = [d["theta_over_pi"] for d in data]
-Rlist = data[1]["Rlist"]
-ag = data[1]["ag"]
-@printf("loaded %d θ points: %s;  R = %s\n", length(data), string(thetas), string(Rlist))
+thetas = sort(unique(r["theta_over_pi"] for r in recs))
+Rs     = sort(unique(r["R"] for r in recs))
+ag     = recs[1]["ag"]
+getrec(th, R) = recs[findfirst(r -> r["theta_over_pi"]==th && r["R"]==R, recs)]
+@printf("θ/π = %s ;  R = %s (phys %s)\n", string(thetas), string(Rs), string(Rs .* ag))
 
-# ---- Plot 1: <QQ> vs θ/π for each R (connected, real part) ----
-plt = plot(xlabel = "θ/π", ylabel = "Re ⟨Q(-R) Q(R)⟩_c", title = "Charge-transfer correlator vs θ",
-           legend = :best, marker = :circle)
-for (ri, R) in enumerate(Rlist)
-    ys = [real(d["connected"][ri][end]) for d in data]
-    plot!(plt, thetas, ys; label = "R=$R", marker = :circle)
+# ---- Plot 1: <QQ> vs θ/π, one series per R ----
+plt = plot(xlabel="θ/π", ylabel="Re ⟨Q(-R) Q(R)⟩_c", title="Charge-transfer correlator vs θ  (m/g=1, ag=$ag)", legend=:best)
+for R in Rs
+    ys = [real(getrec(th, R)["connected"][end]) for th in thetas]
+    plot!(plt, thetas, ys; label="R=$R (x=$(R*ag))", marker=:circle)
 end
-vline!(plt, [1.0]; ls = :dash, color = :gray, label = "θ=π (transition)")
+vline!(plt, [1.0]; ls=:dash, color=:gray, label="θ=π")
 savefig(plt, joinpath(plotdir, "qq_vs_theta.png"))
-# also the full (unsubtracted) correlator magnitude, for reference
-plt2 = plot(xlabel = "θ/π", ylabel = "|⟨Q(-R) Q(R)⟩|", title = "Charge-transfer correlator (full) vs θ",
-            legend = :best)
-for (ri, R) in enumerate(Rlist)
-    plot!(plt2, thetas, [abs(d["full"][ri][end]) for d in data]; label = "R=$R", marker = :circle)
+
+pltf = plot(xlabel="θ/π", ylabel="|⟨Q(-R) Q(R)⟩|", title="Charge-transfer correlator (full) vs θ", legend=:best)
+for R in Rs
+    plot!(pltf, thetas, [abs(getrec(th, R)["full"][end]) for th in thetas]; label="R=$R", marker=:circle)
 end
-vline!(plt2, [1.0]; ls = :dash, color = :gray, label = "θ=π")
-savefig(plt2, joinpath(plotdir, "qq_full_vs_theta.png"))
+vline!(pltf, [1.0]; ls=:dash, color=:gray, label="θ=π")
+savefig(pltf, joinpath(plotdir, "qq_full_vs_theta.png"))
 println("wrote qq_vs_theta.png, qq_full_vs_theta.png")
 
-# ---- Plot 2: E-field and current heatmaps, per θ ----
-for d in data
-    tag = replace(string(d["theta_over_pi"]), "." => "p")
-    heat_t = d["heat_t"]; Emap = d["Emap"]; Jmap = d["Jmap"]
+# ---- Plot 2: E-field & current heatmaps per θ (from the record-heat / smallest-R file) ----
+for th in thetas
+    r = nothing
+    for R in Rs
+        rr = getrec(th, R)
+        if haskey(rr, "Emap") && !isempty(rr["Emap"]); r = rr; break; end
+    end
+    r === nothing && (@warn "no heatmap data for θ/π=$th"; continue)
+    tag = replace(string(th), "." => "p")
+    heat_t = r["heat_t"]; Emap = r["Emap"]; Jmap = r["Jmap"]
     nbond = size(Emap, 2)
-    x = ((1:nbond) .- d["center"]) .* ag        # physical position relative to centre
-    for (Z, name, cl, ttl) in ((Emap, "E", :balance, "Electric field"),
-                               (Jmap, "J", :balance, "Charge current j¹"))
+    x = ((1:nbond) .- r["center"]) .* ag
+    for (Z, nm, ttl) in ((Emap, "E", "Electric field"), (Jmap, "J", "Charge current j¹"))
         cmax = maximum(abs, Z); cmax = cmax == 0 ? 1.0 : cmax
-        h = heatmap(x, heat_t, Z; xlabel = "x (relative to centre, g·x)", ylabel = "t (g·t)",
-                    title = "$ttl,  θ/π=$(d["theta_over_pi"])", color = cl, clims = (-cmax, cmax))
-        # mark detector positions
-        for R in Rlist; vline!(h, [-R*ag, R*ag]; ls = :dot, color = :black, label = "", alpha = 0.4); end
-        savefig(h, joinpath(plotdir, "heat_$(name)_theta$(tag).png"))
+        h = heatmap(x, heat_t, Z; xlabel="x (g·x, rel. centre)", ylabel="t (g·t)",
+                    title="$ttl,  θ/π=$th", color=:balance, clims=(-cmax, cmax))
+        for R in Rs; vline!(h, [-R*ag, R*ag]; ls=:dot, color=:black, label="", alpha=0.4); end
+        savefig(h, joinpath(plotdir, "heat_$(nm)_theta$(tag).png"))
     end
 end
-println("wrote heatmaps for θ/π = ", string(thetas))
-println("plots in $plotdir")
+println("wrote heatmaps; plots in $plotdir")
