@@ -1,0 +1,29 @@
+# Shared configuration for the charge-transfer production sweep.
+# All lengths in units g = 1 (ag = a·g the spacing).
+using Schwinger, SchwingerDetectors
+
+const N       = parse(Int,     get(ENV, "N",        "1024"))   # finite lattice sites
+const AG      = parse(Float64, get(ENV, "AG",       "0.1"))    # a·g
+const MG      = parse(Float64, get(ENV, "MG",       "1.0"))    # m/g
+const GX_WL   = parse(Float64, get(ENV, "GX_WL",    "2.0"))    # Wilson-line length in g·x
+const RLIST   = [parse(Int, x) for x in split(get(ENV, "RLIST", "20,30,40"), ",")]  # detector offsets (sites)
+const T       = parse(Float64, get(ENV, "T",        "90.0"))   # evolution time (g·t)
+const DT      = parse(Float64, get(ENV, "DT",       "0.1"))    # grid spacing (g·t)
+const SUBSTEP = parse(Int,     get(ENV, "SUBSTEPS", "1"))      # TDVP substeps per grid gap
+const MAXBOND = parse(Int,     get(ENV, "MAXBOND",  "256"))    # evolution bond-dim cap
+const GS_BOND = parse(Int,     get(ENV, "GS_BOND",  "200"))    # groundstate bond-dim
+const GS_TOL  = parse(Float64, get(ENV, "GS_TOL",   "1e-8"))   # groundstate energy tol
+const HEAT_STRIDE = parse(Int, get(ENV, "HEAT_STRIDE", "5"))   # record density maps every k steps
+const EAVG_TOL = parse(Float64, get(ENV, "EAVG_TOL", "0.5"))   # |<E_avg>| must be below this (+eps)
+
+# θ/π  ->  θ2π = (θ/π)/2
+theta2pi(theta_over_pi) = theta_over_pi / 2
+
+# center bond/site of the lattice and the Wilson-line endpoints (gx = GX_WL wide, centered)
+const CENTER = N ÷ 2
+wilson_endpoints() = (CENTER - round(Int, GX_WL / AG) ÷ 2, CENTER - round(Int, GX_WL / AG) ÷ 2 + round(Int, GX_WL / AG))
+
+model(theta2pi_val) = build_model(; N = N, F = 1, q = 1, ag = AG, mg = MG, theta2pi = theta2pi_val)
+
+# a filesystem-safe tag for a θ/π value, e.g. 1.2 -> "1p2"
+thetatag(theta_over_pi) = replace(string(theta_over_pi), "." => "p")

@@ -177,3 +177,70 @@ function charge_transfer_correlator(state::MPSKitState, T::Real, bonds::Tuple{In
             method = method, discrepancy = disc,
             full_matrix = fmat, full_accumulated = facc)
 end
+
+"""
+    charge_transfer_correlator(state, T, pairs::AbstractVector{<:Tuple{Integer,Integer}};
+                               nsteps, substeps=1, two_site=true, maxbond=nothing,
+                               observe=nothing) -> NamedTuple
+
+Streaming, memory-safe, multi-detector version of the `:accumulated` method: computes the
+charge-transfer correlator `C(T)=⟨state|Q(bL)Q(bR)|state⟩` for SEVERAL bond pairs at once in a
+SINGLE forward evolution of `state`, WITHOUT storing snapshots (suitable for large lattices /
+long times where the O(nsteps)-snapshot storage of the single-pair method is prohibitive).
+
+`pairs` is a vector of `(bL, bR)` bond tuples. Each pair carries its own O(1) set of forward
+accumulators (see the file header); the state itself is evolved once. Returns
+`(; t, pairs, full, connected, QL, QR)` where `full`, `connected`, `QL`, `QR` are `Vector`s
+indexed like `pairs`, each the cumulative curve over the grid `t`. `observe(ψ, t, k)` is an
+optional callback run after each step on the evolved physical state (e.g. to record density
+spacetime maps for heatmaps in the same pass). This is the routine used for production runs; it
+reproduces the validated single-pair `:accumulated` result (they share the same recursion).
+"""
+function charge_transfer_correlator(state::MPSKitState, T::Real,
+                                    pairs::AbstractVector{<:Tuple{Integer,Integer}};
+                                    nsteps::Int, substeps::Int = 1, two_site::Bool = true,
+                                    maxbond = nothing, observe = nothing)
+    _assert_not_window(state, "charge_transfer_correlator")
+    isempty(pairs) && throw(ArgumentError("pairs must be non-empty"))
+    lat = state.hamiltonian.lattice
+    P = length(pairs)
+    jLs = [ChargeCurrent(lat, p[1]; backend = :MPSKit) for p in pairs]
+    jRs = [ChargeCurrent(lat, p[2]; backend = :MPSKit) for p in pairs]
+
+    M = nsteps; dt = float(T) / M; mb = two_site ? maxbond : nothing
+    fwd(s) = evolve(s, dt; nsteps = substeps, two_site = two_site, maxlinkdim = mb)[1]
+
+    ψ = state
+    Rv = Vector{MPSKitState}(undef, P); Ru = similar(Rv)
+    e0v = Vector{MPSKitState}(undef, P); e0u = similar(e0v)
+    full = [zeros(ComplexF64, M + 1) for _ in 1:P]
+    jLt = [zeros(Float64, M + 1) for _ in 1:P]; jRt = [zeros(Float64, M + 1) for _ in 1:P]
+    for p in 1:P
+        a0 = act(jRs[p], ψ); b0 = act(jLs[p], ψ)
+        Rv[p] = dt * a0; Ru[p] = dt * b0; e0v[p] = a0; e0u[p] = b0
+        jLt[p][1] = real(expectation(jLs[p], ψ)); jRt[p][1] = real(expectation(jRs[p], ψ))
+    end
+    observe !== nothing && observe(ψ, 0.0, 0)
+
+    for k in 1:M
+        ψ = fwd(ψ)
+        for p in 1:P
+            ak = act(jRs[p], ψ); bk = act(jLs[p], ψ)
+            Rv[p] = _addstates(fwd(Rv[p]), dt * ak); e0v[p] = fwd(e0v[p])
+            Ru[p] = _addstates(fwd(Ru[p]), dt * bk); e0u[p] = fwd(e0u[p])
+            vk = _addstates(Rv[p], (-dt / 2) * ak, (-dt / 2) * e0v[p])
+            uk = _addstates(Ru[p], (-dt / 2) * bk, (-dt / 2) * e0u[p])
+            full[p][k + 1] = dot(uk, vk)
+            jLt[p][k + 1] = real(expectation(jLs[p], ψ))
+            jRt[p][k + 1] = real(expectation(jRs[p], ψ))
+        end
+        observe !== nothing && observe(ψ, k * dt, k)
+    end
+
+    ts = collect(0:M) .* dt
+    QL = [_cumintegral(jLt[p], M, dt) for p in 1:P]
+    QR = [_cumintegral(jRt[p], M, dt) for p in 1:P]
+    connected = [full[p] .- (QL[p] .* QR[p]) for p in 1:P]
+    return (; t = ts, pairs = collect(pairs), full = full, connected = connected,
+            QL = QL, QR = QR)
+end
