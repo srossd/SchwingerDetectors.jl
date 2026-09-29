@@ -56,7 +56,7 @@ else               # ---- fresh start ----
     full = zeros(ComplexF64, M+1); jLt = zeros(M+1); jRt = zeros(M+1)
     jLt[1] = jexp(jL, psi); jRt[1] = jexp(jR, psi)
     heat_t = Float64[]; Emaps = Vector{Vector{Float64}}(); Jmaps = Vector{Vector{Float64}}()
-    if RECORD_HEAT; push!(heat_t, 0.0); push!(Emaps, real.(electricfields(psi))); push!(Jmaps, real.(chargecurrents(psi))); end
+    if RECORD_HEAT; push!(heat_t, 0.0); push!(Emaps, vec(real.(electricfields(psi)))); push!(Jmaps, vec(real.(chargecurrents(psi)))); end
     k = 0
     @printf("[%s] FRESH start: N=%d ag=%.2f m/g=%.1f θ2π=%.3f bonds=(%d,%d) T=%.0f M=%d dt=%.2f maxbond=%d\n",
             tag, N, AG, MG, t2p, bL, bR, T, M, DT, mb); flush(stdout)
@@ -83,7 +83,7 @@ while k < M
     full[k+1] = dot(uk, vk)
     jLt[k+1] = jexp(jL, psi); jRt[k+1] = jexp(jR, psi)
     if RECORD_HEAT && (k % HEAT_STRIDE == 0)
-        push!(heat_t, k*DT); push!(Emaps, real.(electricfields(psi))); push!(Jmaps, real.(chargecurrents(psi)))
+        push!(heat_t, k*DT); push!(Emaps, vec(real.(electricfields(psi)))); push!(Jmaps, vec(real.(chargecurrents(psi))))
     end
     if k % CKPT_EVERY == 0 || (time()-t0) > WALL
         checkpoint(k)
