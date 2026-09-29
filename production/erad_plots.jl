@@ -18,7 +18,7 @@ getrec(mg, L) = recs[findfirst(r -> r["mg"]==mg && r["L"]==L, recs)]
 trapz(t, y) = sum((@view(y[2:end]) .+ @view(y[1:end-1]))/2 .* diff(t))
 @printf("masses=%s  Ls=%s (phys %s)\n", string(masses), string(Ls), string(Ls .* ag))
 
-DET = parse(Int, get(ENV, "DET_OFF", "25"))   # detector at bond c+DET (physical DET*ag), outside all strings
+DET = parse(Int, get(ENV, "DET_OFF", "100"))  # detector at bond c+DET (physical DET*ag); 100 sites = phys 20, outside all strings & boundary-clean at N=384
 
 # ---- (1) radiated energy vs L ----
 plt = plot(xlabel="L (sites)", ylabel="E_rad = ∫𝒥(x_D,t) dt",
