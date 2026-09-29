@@ -16,10 +16,12 @@ for mg in (0.0, 1.0)
     f = joinpath(outdir, "erad_mg$(replace(string(mg),"."=>"p"))_L$(L).jld2")
     isfile(f) || (@warn "missing $f"; continue)
     global found = true
-    d = load(f); t = d["t"]; Jmap = d["Jmap"]; c = d["c"]; ag = d["ag"]
+    d = load(f); t = d["t"]; DetJ = d["DetJ"]; detbonds = d["detbonds"]; c = d["c"]; ag = d["ag"]
     ls = mg == 0.0 ? :solid : :dash
     for D in dets
-        col = min(c + D, size(Jmap, 2)); j = Jmap[:, col]
+        col = findfirst(==(c + D), detbonds)                 # detector on the +x side
+        col === nothing && (@warn "no detector bond for offset $D"; continue)
+        j = DetJ[:, col]
         C = zeros(length(t)); for k in 2:length(t); C[k] = C[k-1] + (j[k]+j[k-1])/2*(t[k]-t[k-1]); end
         plot!(plt, t, C; label="m/g=$mg, x_D=$(round(D*ag; digits=1))", ls=ls, lw=2)
         @printf("m/g=%.1f x_D=%.1f: E_rad(T=%.0f)=%.4e\n", mg, D*ag, t[end], C[end])
