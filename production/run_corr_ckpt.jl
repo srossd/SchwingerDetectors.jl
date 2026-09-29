@@ -12,6 +12,7 @@ using Statistics, Printf, JLD2, LinearAlgebra
 using Schwinger, SchwingerDetectors
 const CTC = SchwingerDetectors
 include(joinpath(@__DIR__, "config.jl"))
+include(joinpath(@__DIR__, "persist.jl"))
 
 theta_over_pi = parse(Float64, ARGS[1])
 R      = parse(Int, ARGS[2])
@@ -35,9 +36,6 @@ mb = MAXBOND
 fwd(s) = evolve(s, DT; nsteps=SUBSTEP, two_site=true, maxlinkdim=mb)[1]
 jexp(j,s) = real(expectation(j, s))
 
-# atomic savestate (write to tmp, rename)
-function asave(path, st); tmp = path * ".tmp"; savestate(tmp, st); mv(tmp, path; force=true); end
-
 metaf = joinpath(ckd, "meta.jld2")
 if isfile(metaf)   # ---- resume ----
     d = load(metaf)
@@ -46,12 +44,12 @@ if isfile(metaf)   # ---- resume ----
     jLt = d["jLt"]::Vector{Float64}; jRt = d["jRt"]::Vector{Float64}
     heat_t = d["heat_t"]::Vector{Float64}
     Emaps = d["Emaps"]::Vector{Vector{Float64}}; Jmaps = d["Jmaps"]::Vector{Vector{Float64}}
-    psi = loadstate(joinpath(ckd,"psi.jld2"), m.H)
-    Rv  = loadstate(joinpath(ckd,"Rv.jld2"),  m.H); Ru  = loadstate(joinpath(ckd,"Ru.jld2"),  m.H)
-    e0v = loadstate(joinpath(ckd,"e0v.jld2"), m.H); e0u = loadstate(joinpath(ckd,"e0u.jld2"), m.H)
+    psi = load_state(joinpath(ckd,"psi.bin"), m.H)
+    Rv  = load_state(joinpath(ckd,"Rv.bin"),  m.H); Ru  = load_state(joinpath(ckd,"Ru.bin"),  m.H)
+    e0v = load_state(joinpath(ckd,"e0v.bin"), m.H); e0u = load_state(joinpath(ckd,"e0u.bin"), m.H)
     @printf("[%s] RESUME at step %d/%d\n", tag, k, M); flush(stdout)
 else               # ---- fresh start ----
-    gs = loadstate(joinpath(outdir, "gs_theta$(thetatag(theta_over_pi)).jld2"), m.H)
+    gs = load_state(joinpath(outdir, "gs_theta$(thetatag(theta_over_pi)).bin"), m.H)
     psi = wilson_line_quench(m, wilson_endpoints()...; gs=gs).state
     a0 = act(jR, psi); b0 = act(jL, psi)
     Rv = DT*a0; Ru = DT*b0; e0v = a0; e0u = b0
@@ -65,8 +63,8 @@ else               # ---- fresh start ----
 end
 
 function checkpoint(k)
-    asave(joinpath(ckd,"psi.jld2"), psi); asave(joinpath(ckd,"Rv.jld2"), Rv)
-    asave(joinpath(ckd,"Ru.jld2"), Ru);  asave(joinpath(ckd,"e0v.jld2"), e0v); asave(joinpath(ckd,"e0u.jld2"), e0u)
+    save_state(joinpath(ckd,"psi.bin"), psi); save_state(joinpath(ckd,"Rv.bin"), Rv)
+    save_state(joinpath(ckd,"Ru.bin"), Ru);   save_state(joinpath(ckd,"e0v.bin"), e0v); save_state(joinpath(ckd,"e0u.bin"), e0u)
     tmp = metaf * ".tmp"
     jldsave(tmp; k=k, full=full, jLt=jLt, jRt=jRt, heat_t=heat_t, Emaps=Emaps, Jmaps=Jmaps,
             theta_over_pi=theta_over_pi, t2p=t2p, N=N, ag=AG, mg=MG, R=R, T=T, dt=DT, maxbond=mb, M=M)

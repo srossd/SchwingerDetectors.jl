@@ -36,7 +36,7 @@
 
 # add SchwingerStates by summing the underlying MPS (bond dims add; a subsequent
 # `evolve` retruncates). Used only for the accumulators.
-_addstates(ss...) = MPSKitState(ss[1].hamiltonian, sum(s.psi for s in ss), ss[1].defects)
+_addstates(ss...) = MPSKitState(ss[1].hamiltonian, sum(s.psi for s in ss))
 
 # cumulative composite-trapezoid weights on the grid 0 = t₀ < … < t_m (uniform Δt).
 function _trapweights(m::Int, dt::Float64)

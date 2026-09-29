@@ -8,6 +8,7 @@
 #   julia --project=production production/vacuum.jl <theta_over_pi> <outdir>
 using Statistics, Printf, JLD2
 include(joinpath(@__DIR__, "config.jl"))
+include(joinpath(@__DIR__, "persist.jl"))
 
 theta_over_pi = parse(Float64, ARGS[1])
 outdir = get(ARGS, 2, joinpath(@__DIR__, "..", "data", "qq_sweep"))
@@ -26,8 +27,8 @@ ok = abs(Eavg) < EAVG_TOL + 0.02   # small tolerance; θ/π=1 is borderline (<E>
 @printf("[vacuum] E0=%.6f  <E_avg>=%.4f  |<E_avg>|=%.4f  -> %s\n",
         E0, Eavg, abs(Eavg), ok ? "OK (true branch)" : "FAIL (wrong branch?)"); flush(stdout)
 
-path = joinpath(outdir, "gs_theta$(thetatag(theta_over_pi)).jld2")
-savestate(path, gs)
+path = joinpath(outdir, "gs_theta$(thetatag(theta_over_pi)).bin")
+save_state(path, gs)
 @save joinpath(outdir, "vacinfo_theta$(thetatag(theta_over_pi)).jld2") theta_over_pi t2p Eavg E0 ok N AG MG
 println("[vacuum] saved $path")
 ok || (@error "vacuum on wrong branch"; exit(3))
