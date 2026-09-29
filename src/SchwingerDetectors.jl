@@ -26,6 +26,7 @@ using LinearAlgebra
 include("state_prep.jl")
 include("measure.jl")
 include("detectors.jl")
+include("charge_transfer.jl")
 
 # --- model / state preparation (rehost/quench, vacuumof, quasiparticle come from Schwinger) ---
 export build_model, prepare_groundstate
@@ -37,5 +38,8 @@ export evolve_and_measure, times, density_map, vacuum_tile
 
 # --- detectors (correlator2pt comes from Schwinger; detector_2pt wraps it) ---
 export detector_1pt, detector_1pt_operator, detector_2pt, detector_2pt_equal_time
+
+# --- time-integrated ("charge-transfer") current correlator in a non-eigenstate ---
+export charge_transfer_correlator
 
 end # module

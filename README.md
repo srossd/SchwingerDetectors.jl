@@ -72,6 +72,10 @@ More end-to-end scripts (each honours `SMOKE=1` for a seconds-long wiring run) l
   eigenstate reference (a named wrapper over `Schwinger.correlator2pt`).
 - `detector_2pt_equal_time` — connected equal-time ⟨O O'⟩ *inside* a non-eigenstate quench
   state, evaluated on each snapshot.
+- `charge_transfer_correlator` — correlator of time-integrated current detectors
+  Q(x)=∫₀ᵀ j¹(x,t)dt in an arbitrary (non-eigenstate) state, ⟨ψ|Q(bL)Q(bR)|ψ⟩. Does the
+  genuine two-time evolution (no scalar-phase shortcut); two cross-checked algorithms;
+  returns the cumulative T-scan with full and connected variants.
 
 ## Caveats
 

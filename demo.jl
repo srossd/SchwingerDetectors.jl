@@ -2,12 +2,12 @@
 # demo.jl — end-to-end smoke of the toolkit's three capabilities on a tiny lattice.
 #
 # Run from the project root (environment active):
-#   SMOKE=1 julia --project=. demo.jl        # tiny, ~seconds
-#   AG=0.2 MG=0.0 N=64 julia --project=. demo.jl
+#   SMOKE=1 julia --project=examples demo.jl        # tiny, ~seconds
+#   AG=0.2 MG=0.0 N=64 julia --project=examples demo.jl
 #
 # It (1) builds a string quench, (2) evolves while measuring densities + reads a
 # detector 1-pt time series, and (3) computes a detector 2-pt correlator — all with
-# exported Schwinger.jl calls via SchwingerToolkit. Outputs go to data/toolkit_demo/.
+# exported Schwinger.jl calls via SchwingerDetectors. Outputs go to data/toolkit_demo/.
 # =============================================================================
 using Schwinger, SchwingerDetectors, JLD2, Printf
 

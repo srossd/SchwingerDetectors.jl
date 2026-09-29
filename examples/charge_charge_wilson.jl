@@ -17,8 +17,8 @@
 # subtraction of ⟨j¹(bR)⟩⟨j¹(bL)⟩), evaluated on each TDVP snapshot.
 #
 # Run from the project root:
-#   SMOKE=1 julia --project=. examples/charge_charge_wilson.jl
-#   AG=0.2 MG=0.0 N=128 NL=16 T=12 RLIST=8,16,24 julia --project=. examples/charge_charge_wilson.jl
+#   SMOKE=1 julia --project=examples examples/charge_charge_wilson.jl
+#   AG=0.2 MG=0.0 N=128 NL=16 T=12 RLIST=8,16,24 julia --project=examples examples/charge_charge_wilson.jl
 # =============================================================================
 using Schwinger, SchwingerDetectors, JLD2, Printf
 

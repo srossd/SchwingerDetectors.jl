@@ -9,8 +9,8 @@ Builds a string quench, reads an energy-current 1-pt series while recording dens
 computes a vacuum ``\langle j^1 j^1\rangle_c`` 2-pt correlator — exercising all three files.
 
 ```bash
-SMOKE=1 julia --project=. demo.jl
-AG=0.2 MG=0.0 N=64 julia --project=. demo.jl
+SMOKE=1 julia --project=examples demo.jl
+AG=0.2 MG=0.0 N=64 julia --project=examples demo.jl
 ```
 
 ## `examples/energy_1pt_probe_charges.jl` — energy 1-pt
@@ -22,8 +22,8 @@ current ``\mathcal{J}=T^{01}`` radiate outward at two fixed detectors — the on
 ``\partial_t h_n = \mathcal{J}_n - \mathcal{J}_{n+1}``.
 
 ```bash
-SMOKE=1 julia --project=. examples/energy_1pt_probe_charges.jl
-AG=0.2 MG=0.0 N=128 STRING_L=16 DET=24 T=14 julia --project=. examples/energy_1pt_probe_charges.jl
+SMOKE=1 julia --project=examples examples/energy_1pt_probe_charges.jl
+AG=0.2 MG=0.0 N=128 STRING_L=16 DET=24 T=14 julia --project=examples examples/energy_1pt_probe_charges.jl
 ```
 
 ## `examples/charge_charge_wilson.jl` — charge–charge 2-pt inside a quench
@@ -35,6 +35,18 @@ Create a charge pair joined by a flux string, ``|\psi\rangle = W|\text{vac}\rang
 in-state expectation — not `correlator2pt` — is the correct object.
 
 ```bash
-SMOKE=1 julia --project=. examples/charge_charge_wilson.jl
-AG=0.2 MG=0.0 N=128 NL=16 T=12 RLIST=8,16,24 julia --project=. examples/charge_charge_wilson.jl
+SMOKE=1 julia --project=examples examples/charge_charge_wilson.jl
+AG=0.2 MG=0.0 N=128 NL=16 T=12 RLIST=8,16,24 julia --project=examples examples/charge_charge_wilson.jl
+```
+
+## `examples/wilson_charge_transfer.jl` — integrated-current correlator in a quench
+
+Prepare |ψ⟩ = W|vac⟩ and compute ``\langle\psi|Q(c-R)Q(c+R)|\psi\rangle`` with
+``Q(x)=\int_0^T j^1(x,t)dt`` via [`charge_transfer_correlator`](@ref): a low-resolution
+`method=:both` cross-check, then the cumulative curve C(R, tₘ) vs upper limit (the free
+T-scan) for each R, plus a maxbond convergence check.
+
+```bash
+SMOKE=1 julia --project=examples examples/wilson_charge_transfer.jl
+AG=0.2 MG=0.0 N=64 NL=8 T=10 RLIST=6,12 NSTEPS=80 julia --project=examples examples/wilson_charge_transfer.jl
 ```

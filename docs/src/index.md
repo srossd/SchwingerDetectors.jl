@@ -12,6 +12,7 @@ Everything lives in the module `SchwingerDetectors`, spread across three files:
 | `state_prep.jl` | prepare initial states | [`build_model`](@ref), [`prepare_groundstate`](@ref), [`string_quench`](@ref), [`wilson_line_quench`](@ref), [`local_operator_quench`](@ref), [`moving_soliton`](@ref), [`moving_meson`](@ref), [`moving_wavepackets`](@ref) |
 | `measure.jl` | evolve + record densities | [`evolve_and_measure`](@ref), [`times`](@ref), [`density_map`](@ref), [`vacuum_tile`](@ref) |
 | `detectors.jl` | detector 1-pt / 2-pt | [`detector_1pt`](@ref), [`detector_1pt_operator`](@ref), [`detector_2pt`](@ref), [`detector_2pt_equal_time`](@ref) |
+| `charge_transfer.jl` | integrated-current correlator | [`charge_transfer_correlator`](@ref) |
 
 ## Table of contents
 
@@ -49,6 +50,9 @@ Units are `g = 1` throughout, so `ag = a·g` is the spacing and `mg = m/g` the m
   — [`detector_2pt`](@ref), a named wrapper over `Schwinger.correlator2pt`.
 - **2-point inside a quench (non-eigenstate) state** — [`detector_2pt_equal_time`](@ref) on
   each snapshot; the single-phase `correlator2pt` trick does not apply here.
+- **Time-integrated current (charge-transfer) correlator in a non-eigenstate** —
+  [`charge_transfer_correlator`](@ref) for ``\langle\psi|Q(b_L)Q(b_R)|\psi\rangle`` with
+  ``Q(x)=\int_0^T j^1(x,t)dt``; the full two-time evolution is done explicitly.
 
 ## Caveats
 

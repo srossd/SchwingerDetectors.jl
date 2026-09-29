@@ -2,6 +2,7 @@ data/
 *.jld2
 Manifest.toml
 .DS_Store
+scratch_*.jl
 
 # orchestrator/agent config and internal notes — kept local, not published
 CLAUDE.md

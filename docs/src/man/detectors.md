@@ -42,3 +42,30 @@ detector_1pt_operator
 detector_2pt
 detector_2pt_equal_time
 ```
+
+## Time-integrated ("charge-transfer") correlator
+
+For the correlator of the *time-integrated* current detectors ``Q(x)=\int_0^T j^1(x,t)\,dt``
+in an arbitrary state (e.g. a Wilson-line quench, which is **not** an energy eigenstate),
+
+```math
+C(T) = \langle\psi|\,Q(b_L)\,Q(b_R)\,|\psi\rangle
+     = \int_0^T\!\!\int_0^T dt_1\,dt_2\,\langle\psi|\,j^1(b_L,t_1)\,j^1(b_R,t_2)\,|\psi\rangle ,
+```
+
+use [`charge_transfer_correlator`](@ref). This is a genuinely two-time object: because
+``|\psi\rangle`` is not stationary, the ``e^{\pm iHt}`` are real many-body evolutions and
+**cannot** be replaced by a single scalar phase ``e^{iE_0 t}`` (the shortcut `correlator2pt`
+uses, valid only for an eigenstate reference). Since ``Q`` is Hermitian the correlator equals
+``\langle u|v\rangle`` with ``|v\rangle=Q(b_R)|\psi\rangle``, ``|u\rangle=Q(b_L)|\psi\rangle``;
+the overall ``e^{iHT}`` cancels, so the result is phase-convention-free.
+
+Two independent algorithms are provided and cross-checked (`method = :both`): an O(nsteps)
+forward accumulation (`:accumulated`) and an O(nsteps²) reference built from the full two-time
+matrix (`:matrix`). The return value is the **cumulative curve** ``C(t_m)`` at every grid
+time, i.e. a built-in convergence scan in the upper limit ``T``, with both `full` and
+`connected` variants.
+
+```@docs
+charge_transfer_correlator
+```

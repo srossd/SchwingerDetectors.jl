@@ -10,8 +10,8 @@
 # (the density that actually partners 𝒥 in ∂_t h_n = 𝒥_n − 𝒥_{n+1}).
 #
 # Run from the project root:
-#   SMOKE=1 julia --project=. examples/energy_1pt_probe_charges.jl
-#   AG=0.2 MG=0.0 N=128 STRING_L=16 DET=24 T=14 julia --project=. examples/energy_1pt_probe_charges.jl
+#   SMOKE=1 julia --project=examples examples/energy_1pt_probe_charges.jl
+#   AG=0.2 MG=0.0 N=128 STRING_L=16 DET=24 T=14 julia --project=examples examples/energy_1pt_probe_charges.jl
 # =============================================================================
 using Schwinger, SchwingerDetectors, JLD2, Printf
 
