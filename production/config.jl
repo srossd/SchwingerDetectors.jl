@@ -2,17 +2,18 @@
 # All lengths in units g = 1 (ag = a·g the spacing).
 using Schwinger, SchwingerDetectors
 
-const N       = parse(Int,     get(ENV, "N",        "1024"))   # finite lattice sites
-const AG      = parse(Float64, get(ENV, "AG",       "0.1"))    # a·g
+# Defaults are the ag=0.2, same-physical-box (L=102.4/g) plan; override any via ENV.
+const N       = parse(Int,     get(ENV, "N",        "512"))    # finite lattice sites
+const AG      = parse(Float64, get(ENV, "AG",       "0.2"))    # a·g  (physical box L = N·ag = 102.4)
 const MG      = parse(Float64, get(ENV, "MG",       "1.0"))    # m/g
-const GX_WL   = parse(Float64, get(ENV, "GX_WL",    "2.0"))    # Wilson-line length in g·x
-const RLIST   = [parse(Int, x) for x in split(get(ENV, "RLIST", "20,30,40"), ",")]  # detector offsets (sites)
-const T       = parse(Float64, get(ENV, "T",        "90.0"))   # evolution time (g·t)
-const DT      = parse(Float64, get(ENV, "DT",       "0.1"))    # grid spacing (g·t)
+const GX_WL   = parse(Float64, get(ENV, "GX_WL",    "2.0"))    # Wilson-line length in g·x  -> 10 sites
+const RLIST   = [parse(Int, x) for x in split(get(ENV, "RLIST", "10,15,20"), ",")]  # detector offsets (sites) = phys 2,3,4
+const T       = parse(Float64, get(ENV, "T",        "90.0"))   # evolution time (g·t); boundary-clean to ~98
+const DT      = parse(Float64, get(ENV, "DT",       "0.2"))    # grid spacing (g·t); benchmarked
 const SUBSTEP = parse(Int,     get(ENV, "SUBSTEPS", "1"))      # TDVP substeps per grid gap
 const MAXBOND = parse(Int,     get(ENV, "MAXBOND",  "256"))    # evolution bond-dim cap
-const GS_BOND = parse(Int,     get(ENV, "GS_BOND",  "200"))    # groundstate bond-dim
-const GS_TOL  = parse(Float64, get(ENV, "GS_TOL",   "1e-8"))   # groundstate energy tol
+const GS_BOND = parse(Int,     get(ENV, "GS_BOND",  "96"))     # groundstate bond-dim (gapped -> small)
+const GS_TOL  = parse(Float64, get(ENV, "GS_TOL",   "1e-6"))   # groundstate energy tol
 const HEAT_STRIDE = parse(Int, get(ENV, "HEAT_STRIDE", "5"))   # record density maps every k steps
 const EAVG_TOL = parse(Float64, get(ENV, "EAVG_TOL", "0.5"))   # |<E_avg>| must be below this (+eps)
 
