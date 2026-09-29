@@ -39,12 +39,18 @@ vline!(pltf, [1.0]; ls=:dash, color=:gray, label="θ=π")
 savefig(pltf, joinpath(plotdir, "qq_full_vs_theta.png"))
 println("wrote qq_vs_theta.png, qq_full_vs_theta.png")
 
-# ---- Plot 2: E-field & current heatmaps per θ (from the record-heat / smallest-R file) ----
+# ---- Plot 2: E-field & current heatmaps per θ (prefer dedicated heat_th*.jld2 files) ----
 for th in thetas
+    tagf = replace(string(th), "." => "p")
+    heatfile = joinpath(outdir, "heat_th$(tagf).jld2")
     r = nothing
-    for R in Rs
-        rr = getrec(th, R)
-        if haskey(rr, "Emap") && !isempty(rr["Emap"]); r = rr; break; end
+    if isfile(heatfile)
+        r = load(heatfile)
+    else
+        for R in Rs
+            rr = getrec(th, R)
+            if haskey(rr, "Emap") && !isempty(rr["Emap"]); r = rr; break; end
+        end
     end
     r === nothing && (@warn "no heatmap data for θ/π=$th"; continue)
     tag = replace(string(th), "." => "p")
