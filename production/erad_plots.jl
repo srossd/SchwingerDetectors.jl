@@ -15,6 +15,11 @@ masses = sort(unique(r["mg"] for r in recs)); Ls = sort(unique(r["L"] for r in r
 ag = recs[1]["ag"]; c = recs[1]["c"]
 getrec(mg, L) = recs[findfirst(r -> r["mg"]==mg && r["L"]==L, recs)]
 trapz(t, y) = sum((@view(y[2:end]) .+ @view(y[1:end-1]))/2 .* diff(t))
+function smooth121(Z)   # one pass of 1-2-1 binomial smoothing along the spatial axis (columns)
+    S = copy(Z)
+    @views for j in 2:size(Z, 2)-1; S[:, j] .= (Z[:, j-1] .+ 2 .* Z[:, j] .+ Z[:, j+1]) ./ 4; end
+    return S
+end
 @printf("masses=%s  Ls=%s (phys %s)\n", string(masses), string(Ls), string(Ls .* ag))
 DET = parse(Int, get(ENV, "DET_OFF", "100"))   # detector offset (sites); 100 = phys 20
 
@@ -34,10 +39,11 @@ savefig(plt, joinpath(plotdir, "erad_vs_L.png"))
 
 # ---- (2) E-field & charge-current heatmaps per (m/g, L) ----
 for r in recs
-    for (Z, nm, ttl) in ((r["EFmap"], "E", "Electric field"), (r["JCmap"], "jq", "Charge current j¹"))
+    for (Z0, nm, ttl) in ((r["EFmap"], "E", "Electric field"), (r["JCmap"], "jq", "Charge current j¹"))
+        Z = smooth121(Z0)
         nb = size(Z, 2); x = ((1:nb) .- c) .* ag; cmax = maximum(abs, Z); cmax = cmax==0 ? 1.0 : cmax
         h = heatmap(x, r["t"], Z; xlabel="x (g·x)", ylabel="t (g·t)", color=:balance, clims=(-cmax, cmax),
-                    title="$ttl  m/g=$(r["mg"]) L=$(r["L"]) (gx=$(round(r["L"]*ag;digits=1)))")
+                    title="$ttl (1-2-1 smoothed)  m/g=$(r["mg"]) L=$(r["L"]) (gx=$(round(r["L"]*ag;digits=1)))")
         savefig(h, joinpath(plotdir, "heat_$(nm)_mg$(replace(string(r["mg"]),"."=>"p"))_L$(r["L"]).png"))
     end
 end
